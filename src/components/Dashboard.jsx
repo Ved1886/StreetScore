@@ -1,5 +1,4 @@
 /* Dashboard.jsx — Landing page with "New Match" button */
-import Logo from './Logo';
 
 export default function Dashboard({ onNewMatch, onManageTeams, matchCount }) {
   return (
@@ -7,8 +6,12 @@ export default function Dashboard({ onNewMatch, onManageTeams, matchCount }) {
       {/* Background glow effects */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[var(--color-primary)]/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
       
-      <div className="mb-8 mt-4">
-        <Logo className="w-32 h-32 mx-auto sm:w-40 sm:h-40" />
+      <div className="relative mb-6 w-32 h-32 mx-auto rounded-[32px] overflow-hidden shadow-2xl shadow-[var(--color-primary)]/40 border-2 border-white/10 animate-fade-in-up" style={{ animationDuration: '0.8s' }}>
+        <img 
+          src="/logo.png" 
+          alt="StreetScore Logo" 
+          className="w-full h-full object-cover scale-125" 
+        />
       </div>
 
       <div className="inline-block px-4 py-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-extrabold text-[10px] tracking-widest rounded-full mb-5 border border-[var(--color-primary)]/20 uppercase">
