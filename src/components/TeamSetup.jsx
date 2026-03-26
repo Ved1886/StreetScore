@@ -8,9 +8,9 @@ import { useState } from 'react';
 
 // Minimum players per team to start a match
 const MIN_PLAYERS = 2;
-const MAX_PLAYERS = 11;
+const MAX_PLAYERS = 99;
 
-export default function TeamSetup({ onStartMatch, initialTeams }) {
+export default function TeamSetup({ onStartMatch, initialTeams, savedTeams }) {
   // Team A state
   const [teamAName, setTeamAName] = useState(initialTeams?.teamAName || '');
   const [teamAPlayers, setTeamAPlayers] = useState(initialTeams?.teamAPlayers || []);
@@ -132,12 +132,14 @@ export default function TeamSetup({ onStartMatch, initialTeams }) {
           {/* Team A Card */}
           <TeamCard
             teamLabel="Team A"
+            savedTeams={savedTeams}
             teamColor="from-[var(--color-primary)] to-[var(--color-primary-light)]"
             teamAccent="var(--color-primary)"
             badgeBg="bg-[var(--color-primary)]/10"
             teamName={teamAName}
             setTeamName={setTeamAName}
             players={teamAPlayers}
+            setPlayers={setTeamAPlayers}
             playerInput={teamAInput}
             setPlayerInput={setTeamAInput}
             onAddPlayer={() => addPlayer('A')}
@@ -156,12 +158,14 @@ export default function TeamSetup({ onStartMatch, initialTeams }) {
           {/* Team B Card */}
           <TeamCard
             teamLabel="Team B"
+            savedTeams={savedTeams}
             teamColor="from-[var(--color-accent-green)] to-[var(--color-accent-green-light)]"
             teamAccent="var(--color-accent-green)"
             badgeBg="bg-[var(--color-accent-green)]/10"
             teamName={teamBName}
             setTeamName={setTeamBName}
             players={teamBPlayers}
+            setPlayers={setTeamBPlayers}
             playerInput={teamBInput}
             setPlayerInput={setTeamBInput}
             onAddPlayer={() => addPlayer('B')}
@@ -205,13 +209,23 @@ function TeamCard({
   teamName,
   setTeamName,
   players,
+  setPlayers,
   playerInput,
   setPlayerInput,
   onAddPlayer,
   onRemovePlayer,
   onKeyDown,
   icon,
+  savedTeams,
 }) {
+  const handleSavedTeamSelect = (e) => {
+    const t = savedTeams.find(t => t.id.toString() === e.target.value);
+    if (t) {
+      setTeamName(t.name);
+      setPlayers(t.players);
+    }
+  };
+
   return (
     <div className="glass-card rounded-2xl p-5 animate-fade-in-up">
       {/* Team Header */}
@@ -224,6 +238,17 @@ function TeamCard({
           {players.length}/{MAX_PLAYERS}
         </span>
       </div>
+
+      {/* Select Saved Team */}
+      <select
+        onChange={handleSavedTeamSelect}
+        className="w-full bg-[var(--color-surface-dim)] border border-[var(--color-border)] rounded-xl px-4 py-2 cursor-pointer mb-5 text-sm font-semibold text-[var(--color-text)] focus:border-[var(--color-primary)] shadow-sm"
+      >
+        <option value="">{savedTeams && savedTeams.length > 0 ? 'Load from Saved Teams...' : 'No Saved Teams (Create in Dashboard)'}</option>
+        {savedTeams && savedTeams.map(t => (
+          <option key={t.id} value={t.id}>{t.name} ({t.players.length} players)</option>
+        ))}
+      </select>
 
       {/* Team Name Input */}
       <input

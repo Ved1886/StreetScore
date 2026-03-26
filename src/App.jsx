@@ -12,6 +12,7 @@ import MatchHistory from './components/MatchHistory';
 import ScorePopup from './components/ScorePopup';
 import ConfirmModal from './components/ConfirmModal';
 import PlayerSelectModal from './components/PlayerSelectModal';
+import ManageTeams from './components/ManageTeams';
 
 /* ============================================
    App.jsx — Multi-screen cricket scorer
@@ -36,7 +37,9 @@ const newBatStats = () => ({ runs: 0, balls: 0, fours: 0, sixes: 0, isOut: false
 const newBowlStats = () => ({ runsConceded: 0, wickets: 0, ballsBowled: 0 });
 
 const DEFAULT = {
-  screen: 'dashboard', teamA: '', teamB: '',
+  screen: 'dashboard',
+  matchType: 'standard',
+  teamA: '', teamB: '',
   teamAPlayers: [], teamBPlayers: [],
   totalOvers: 20, battingTeamKey: 'A',
   innings: 1, runs: 0, wickets: 0, balls: 0, extras: 0,
@@ -60,20 +63,20 @@ function playSound(t) {
 }
 
 export default function App() {
-  const [darkMode, setDarkMode] = useState(() => {
-    const s = localStorage.getItem('cst_dark'); return s ? s === 'true' : window.matchMedia('(prefers-color-scheme: dark)').matches;
-  });
-  const [soundOn, setSoundOn] = useState(() => { const s = localStorage.getItem('cst_sound'); return s ? s === 'true' : true; });
   const [m, setM] = useState(() => load(LS_KEY, { ...DEFAULT }));
   const [hist, setHist] = useState(() => load(LS_HIST, []));
   const [popup, setPopup] = useState(null);
   const [confirm, setConfirm] = useState(null);
+  const [darkMode, setDarkMode] = useState(() => load('streetscore_dark', true));
+  const [soundOn, setSoundOn] = useState(() => load('streetscore_sound', true));
+  const [savedTeams, setSavedTeams] = useState(() => load('streetscore_teams', []));
   const [scoreAnim, setScoreAnim] = useState(false);
 
   // Persist
-  useEffect(() => { document.documentElement.classList.toggle('dark', darkMode); localStorage.setItem('cst_dark', darkMode); }, [darkMode]);
-  useEffect(() => { localStorage.setItem('cst_sound', soundOn); }, [soundOn]);
+  useEffect(() => { document.documentElement.classList.toggle('dark', darkMode); save('streetscore_dark', darkMode); }, [darkMode]);
+  useEffect(() => { save('streetscore_sound', soundOn); }, [soundOn]);
   useEffect(() => { save(LS_KEY, m); }, [m]);
+  useEffect(() => { save('streetscore_teams', savedTeams); }, [savedTeams]);
 
   const flash = useCallback(() => { setScoreAnim(true); setTimeout(() => setScoreAnim(false), 350); }, []);
   const showPop = useCallback((t, tp) => { setPopup({ text: t, type: tp }); setTimeout(() => setPopup(null), 650); }, []);
@@ -100,7 +103,7 @@ export default function App() {
   const goTo = (screen) => setM(p => ({ ...p, screen }));
 
   // Dashboard → Team Setup
-  const startNewMatch = () => setM({ ...DEFAULT, screen: 'teamSetup' });
+  const startNewMatch = (type = 'standard') => setM({ ...DEFAULT, screen: 'teamSetup', matchType: type });
 
   // Team Setup → Match Config
   const teamsReady = (data) => setM(p => ({
@@ -124,6 +127,7 @@ export default function App() {
       runs: 0, wickets: 0, balls: 0, extras: 0,
       innings: 1, history: [], ballLog: [], pendingSelections: [],
       firstInningsData: null, matchResult: null,
+      matchType: p.matchType, // Preserve matchType from previous state
     }));
   };
 
@@ -160,9 +164,13 @@ export default function App() {
         if (bw[currentBowler]) bw[currentBowler].wickets++;
         out.push(facing);
       } else { // wide or noball
-        runs += 1; extras += 1; label = type === 'wide' ? 'Wd' : 'Nb';
+        const isStreet = prev.matchType === 'street';
+        const extraRuns = isStreet ? 0 : 1;
+        runs += extraRuns; extras += extraRuns; 
+        label = type === 'wide' ? 'Wd' : 'Nb';
+        if (isStreet) label += '(0)'; // Visual cue in timeline
         ltype = type === 'wide' ? 'wide' : 'noball';
-        if (bw[currentBowler]) bw[currentBowler].runsConceded += 1;
+        if (bw[currentBowler]) bw[currentBowler].runsConceded += extraRuns;
       }
 
       // Legal delivery: update ball counts
@@ -338,10 +346,19 @@ export default function App() {
 
         {/* ===== DASHBOARD ===== */}
         {m.screen === 'dashboard' && (
-          <>
-            <Dashboard onNewMatch={startNewMatch} matchCount={hist.length} />
-            <MatchHistory history={hist} onClear={() => setConfirm({ message: 'Clear all match history?', onConfirm: clearHist })} />
-          </>
+          <Dashboard
+            onNewMatch={startNewMatch}
+            onManageTeams={() => goTo('manageTeams')}
+            matchCount={hist.length}
+          />
+        )}
+        
+        {m.screen === 'manageTeams' && (
+          <ManageTeams 
+            savedTeams={savedTeams}
+            onSaveTeams={setSavedTeams}
+            onBack={() => goTo('dashboard')}
+          />
         )}
 
         {/* ===== TEAM SETUP ===== */}
@@ -351,6 +368,7 @@ export default function App() {
             <TeamSetup
               onStartMatch={teamsReady}
               initialTeams={{ teamAName: m.teamA, teamAPlayers: m.teamAPlayers, teamBName: m.teamB, teamBPlayers: m.teamBPlayers }}
+              savedTeams={savedTeams}
             />
           </>
         )}
