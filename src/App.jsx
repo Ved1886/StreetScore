@@ -446,8 +446,11 @@ export default function App() {
             <div className="flex justify-between items-center mb-4">
               <button onClick={() => goTo('dashboard')} className="text-sm font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-primary)] cursor-pointer">← Back</button>
               {m.liveId && (
-                <div className="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full animate-pulse">
-                  LIVE CODE: {m.liveId}
+                <div 
+                  onClick={() => { navigator.clipboard.writeText(m.liveId); }}
+                  className="bg-red-600 text-white text-xs font-black px-4 py-2 rounded-xl shadow-lg shadow-red-500/30 animate-pulse cursor-pointer hover:scale-105 transition-all text-center"
+                >
+                  🔴 BROADCASTING LIVE: <span className="underline decoration-white/40 underline-offset-4">{m.liveId}</span>
                 </div>
               )}
             </div>

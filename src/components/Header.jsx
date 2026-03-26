@@ -16,10 +16,13 @@ export default function Header({ darkMode, toggleDarkMode, soundOn, toggleSound,
             StreetScore
           </h1>
           {liveId && (
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-              <span className="text-[9px] font-black tracking-widest text-[var(--color-text-muted)] uppercase">
-                {isViewer ? 'Watching Live' : `Casting: ${liveId}`}
+            <div 
+              className="flex items-center gap-1.5 mt-1 cursor-pointer group hover:bg-[var(--color-primary)]/10 px-2 py-0.5 rounded transition-all"
+              onClick={() => { navigator.clipboard.writeText(liveId); alert('Code copied: ' + liveId); }}
+            >
+              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
+              <span className="text-xs font-black text-[var(--color-primary)] uppercase tracking-tighter">
+                {isViewer ? 'Watching Live' : `LIVE ID: ${liveId}`}
               </span>
             </div>
           )}
