@@ -3,7 +3,7 @@
    Large tap-friendly buttons with ripple effect
    ============================================ */
 
-import { useRef, useCallback } from 'react';
+import { useRef, useCallback, useState } from 'react';
 
 /** Trigger a CSS ripple animation on a button */
 function useRipple() {
@@ -59,6 +59,35 @@ export default function Controls({
   const wicketStyle = 'bg-gradient-to-br from-[#ff7675] to-[#e17055] text-white border-2 border-transparent hover:shadow-[0_6px_20px_rgba(225,112,85,0.35)]';
   const extrasStyle = 'bg-gradient-to-br from-[#74b9ff] to-[#0984e3] text-white border-2 border-transparent hover:shadow-[0_6px_20px_rgba(9,132,227,0.3)]';
 
+  const [nbMode, setNbMode] = useState(false);
+
+  if (nbMode) {
+    return (
+      <div className="glass-card rounded-2xl p-5 mb-4 animate-fade-in-up border-2 border-[var(--color-primary)]">
+        <h3 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary)] mb-4 text-center drop-shadow-sm">
+          Runs off the No Ball?
+        </h3>
+        <div className="grid grid-cols-3 gap-3 mb-4">
+          {[0, 1, 2, 3, 4, 6].map(r => (
+            <ScoreButton
+              key={r}
+              id={`btn-nb-${r}`}
+              label={`Nb+${r}`}
+              onClick={() => { setNbMode(false); onNoBall(r); }}
+              className="bg-[var(--color-surface-card)] border-2 border-[#0984e3]/50 text-[var(--color-text)] hover:bg-[#0984e3]/10"
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => setNbMode(false)}
+          className="w-full py-4 rounded-xl border-2 border-[var(--color-border)] text-sm font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-surface-dim)] hover:text-[var(--color-text)] transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card rounded-2xl p-5 mb-4 animate-fade-in-up">
       <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
@@ -79,7 +108,7 @@ export default function Controls({
 
       {/* No Ball — spans full width as a smaller row */}
       <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4">
-        <ScoreButton id="btn-noball" label="Nb" subLabel="No Ball" onClick={onNoBall} className={`${extrasStyle} !py-3`} />
+        <ScoreButton id="btn-noball" label="Nb" subLabel="No Ball" onClick={() => setNbMode(true)} className={`${extrasStyle} !py-3`} />
         <div /> {/* spacer */}
       </div>
 

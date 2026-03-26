@@ -51,6 +51,19 @@ body {
   color: var(--color-text);
   transition: background 0.3s ease, color 0.3s ease;
   overflow-x: hidden;
+  touch-action: manipulation; /* Block double-tap to zoom delay */
+  user-select: none; /* Prevent accidental text selection */
+  -webkit-user-select: none;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent; /* Remove blue flash on tapping */
+}
+
+input, select, textarea {
+  user-select: auto;
+  -webkit-user-select: auto;
+  font-size: 16px !important; /* Extremely important: stops iOS Safari from auto-zooming when tapping inputs */
 }
 
 /* Animated ambient background */

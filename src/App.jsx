@@ -166,11 +166,22 @@ export default function App() {
       } else { // wide or noball
         const isStreet = prev.matchType === 'street';
         const extraRuns = isStreet ? 0 : 1;
-        runs += extraRuns; extras += extraRuns; 
+        runs += extraRuns + runsToAdd; 
+        extras += extraRuns;
+
         label = type === 'wide' ? 'Wd' : 'Nb';
-        if (isStreet) label += '(0)'; // Visual cue in timeline
+        if (runsToAdd > 0) label += `+${runsToAdd}`;
+        else if (isStreet) label += '(0)'; // Visual cue in timeline
+
         ltype = type === 'wide' ? 'wide' : 'noball';
-        if (bw[currentBowler]) bw[currentBowler].runsConceded += extraRuns;
+        if (bw[currentBowler]) bw[currentBowler].runsConceded += (extraRuns + runsToAdd);
+
+        // Add bat runs if hit off a No Ball
+        if (type === 'noball' && runsToAdd > 0 && bs[facing]) {
+          bs[facing].runs += runsToAdd;
+          if (runsToAdd === 4) bs[facing].fours++;
+          if (runsToAdd === 6) bs[facing].sixes++;
+        }
       }
 
       // Legal delivery: update ball counts
@@ -394,7 +405,7 @@ export default function App() {
             <BallTimeline ballLog={m.ballLog} />
             <Controls
               onAddRuns={(r) => processBall('run', r)} onWicket={() => processBall('wicket')}
-              onWide={() => processBall('wide')} onNoBall={() => processBall('noball')}
+              onWide={() => processBall('wide')} onNoBall={(r = 0) => processBall('noball', r)}
               onUndo={undo}
               onReset={() => setConfirm({ message: 'Reset match? You will return to dashboard.', onConfirm: reset })}
               onEndInnings={() => setConfirm({
