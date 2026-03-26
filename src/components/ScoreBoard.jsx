@@ -4,7 +4,7 @@ export default function ScoreBoard({
   battingTeam, runs, wickets, balls, oversDisplay, runRate, extras,
   innings, scoreAnimating, firstInningsScore, target, runsNeeded, requiredRR,
   striker, nonStriker, currentBowler, batsmanStats, bowlerStats, totalOvers,
-  maxWickets = 10, liveId,
+  maxWickets = 10,
 }) {
   const strikerStats = batsmanStats?.[striker];
   const nonStrikerStats = batsmanStats?.[nonStriker];
@@ -13,21 +13,11 @@ export default function ScoreBoard({
 
   return (
     <div className="glass-card rounded-3xl p-6 sm:p-8 mb-4 text-center animate-fade-in-up relative overflow-hidden">
-      {liveId && (
-        <div 
-          onClick={() => { navigator.clipboard.writeText(liveId); alert('Code copied!'); }}
-          className="absolute top-0 left-0 right-0 bg-red-600 py-1.5 text-xs font-black text-white uppercase tracking-[0.25em] shadow-md cursor-pointer active:bg-red-700 transition-colors"
-        >
-          🔴 LIVE CODE: <span className="underline decoration-white/40 underline-offset-2">{liveId}</span>
-        </div>
-      )}
-      <div className={liveId ? 'pt-4' : ''}>
-        {/* Innings Badge */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-bold uppercase tracking-wider mb-3">
-          <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] animate-pulse" />
-          {innings === 1 ? '1st Innings' : '2nd Innings'}
-          {totalOvers && <span className="text-[var(--color-text-muted)]">• {totalOvers} ov</span>}
-        </div>
+      {/* Innings Badge */}
+      <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[var(--color-primary)]/10 text-[var(--color-primary)] text-xs font-bold uppercase tracking-wider mb-3">
+        <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)] animate-pulse" />
+        {innings === 1 ? '1st Innings' : '2nd Innings'}
+        {totalOvers && <span className="text-[var(--color-text-muted)]">• {totalOvers} ov</span>}
       </div>
 
       <p className="text-sm font-bold text-[var(--color-primary)] mb-1">{battingTeam}</p>

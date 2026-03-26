@@ -3,7 +3,7 @@
    dark mode toggle, and sound toggle
    ============================================ */
 
-export default function Header({ darkMode, toggleDarkMode, soundOn, toggleSound, liveId, isViewer }) {
+export default function Header({ darkMode, toggleDarkMode, soundOn, toggleSound }) {
   return (
     <header className="flex items-center justify-between py-3 mb-2">
       {/* Logo */}
@@ -15,17 +15,6 @@ export default function Header({ darkMode, toggleDarkMode, soundOn, toggleSound,
           <h1 className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] bg-clip-text text-transparent leading-none">
             StreetScore
           </h1>
-          {liveId && (
-            <div 
-              className="flex items-center gap-1.5 mt-1 cursor-pointer group hover:bg-[var(--color-primary)]/10 px-2 py-0.5 rounded transition-all"
-              onClick={() => { navigator.clipboard.writeText(liveId); alert('Code copied: ' + liveId); }}
-            >
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
-              <span className="text-xs font-black text-[var(--color-primary)] uppercase tracking-tighter">
-                {isViewer ? 'Watching Live' : `LIVE ID: ${liveId}`}
-              </span>
-            </div>
-          )}
         </div>
       </div>
 

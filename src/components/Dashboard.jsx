@@ -1,15 +1,11 @@
 /* Dashboard.jsx — Landing page with "New Match" button */
 
-import { useState } from 'react';
-
-export default function Dashboard({ onNewMatch, onManageTeams, onJoinLive, matchCount }) {
-  const [liveCode, setLiveCode] = useState('');
+export default function Dashboard({ onNewMatch, onManageTeams, matchCount }) {
   return (
     <div className="relative text-center py-12 px-6 animate-fade-in-up flex flex-col items-center justify-center min-h-[60vh]">
       {/* Background glow effects */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[var(--color-primary)]/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
       
-
       <div className="inline-block px-4 py-1 bg-[var(--color-primary)]/10 text-[var(--color-primary)] font-extrabold text-[10px] tracking-widest rounded-full mb-5 border border-[var(--color-primary)]/20 uppercase">
         Street / Box Cricket Scorer
       </div>
@@ -35,13 +31,14 @@ export default function Dashboard({ onNewMatch, onManageTeams, onJoinLive, match
             🌍 Standard Match
           </span>
         </button>
+
         <button
-          onClick={() => onNewMatch('street', true)}
+          onClick={() => onNewMatch('street')}
           className="relative group px-12 py-3 rounded-[20px] text-lg font-black bg-[var(--color-surface-card)] border-2 border-[var(--color-primary)] text-[var(--color-primary)] shadow-lg hover:-translate-y-1 active:scale-[0.97] transition-all"
         >
           <span className="relative z-10 flex flex-col items-center justify-center">
             <span className="flex items-center gap-2">🚀 Street Match</span>
-            <span className="text-[10px] font-bold opacity-80 mt-1 uppercase tracking-widest leading-none">Auto Live / No Extras</span>
+            <span className="text-[10px] font-bold opacity-80 mt-1 uppercase tracking-widest">No Wide/NB Extras</span>
           </span>
         </button>
 
@@ -51,23 +48,6 @@ export default function Dashboard({ onNewMatch, onManageTeams, onJoinLive, match
         >
           <span className="flex items-center justify-center gap-2">👥 Manage Teams</span>
         </button>
-
-
-
-        <div className="flex gap-2">
-          <input 
-            value={liveCode}
-            onChange={e => setLiveCode(e.target.value.toUpperCase())}
-            placeholder="Enter Match Code"
-            className="flex-1 bg-[var(--color-surface-dim)] border border-[var(--color-border)] rounded-xl px-4 py-2 text-sm font-bold text-[var(--color-text)] focus:border-[var(--color-primary)]"
-          />
-          <button 
-            onClick={() => onJoinLive(liveCode)}
-            className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-xl font-bold text-sm hover:opacity-90"
-          >
-            Join Live
-          </button>
-        </div>
       </div>
 
       {matchCount > 0 && (
