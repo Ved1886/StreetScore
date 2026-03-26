@@ -444,12 +444,15 @@ export default function App() {
           <>
             <ScoreBoard
               battingTeam={battingTeamName} runs={m.runs} wickets={m.wickets} balls={m.balls}
-              oversDisplay={oversDisplay} runRate={runRate} extras={m.extras} innings={m.innings}
-              scoreAnimating={scoreAnim} firstInningsScore={m.firstInningsData ? { runs: m.firstInningsData.runs } : null}
+              oversDisplay={oversDisplay} runRate={runRate} extras={m.extras}
+              innings={m.innings} scoreAnimating={scoreAnim}
+              firstInningsScore={m.firstInningsData?.runs}
               target={target} runsNeeded={runsNeeded} requiredRR={requiredRR}
               striker={m.striker} nonStriker={m.nonStriker} currentBowler={m.currentBowler}
-              batsmanStats={m.batsmanStats} bowlerStats={m.bowlerStats} totalOvers={m.totalOvers}
+              batsmanStats={m.batsmanStats} bowlerStats={m.bowlerStats}
+              totalOvers={m.totalOvers}
               maxWickets={battingPlayers.length}
+              liveId={m.liveId}
             />
             <BallTimeline ballLog={m.ballLog} />
             {!m.isViewer ? (
