@@ -112,7 +112,7 @@ export default function ManageTeams({ savedTeams, onSaveTeams, onBack }) {
              {players.map((p, i) => (
                <div key={i} className="flex justify-between p-2 hover:bg-[var(--color-border)]/50 rounded-lg group">
                  <span className="text-sm font-bold text-[var(--color-text)]">{i+1}. {p}</span>
-                 <button onClick={() => removePlayer(i)} className="text-red-400 text-xs hidden group-hover:block px-2">✕</button>
+                 <button onClick={() => removePlayer(i)} className="text-red-400 text-xs block sm:hidden sm:group-hover:block px-2">✕</button>
                </div>
              ))}
           </div>
@@ -143,7 +143,7 @@ export default function ManageTeams({ savedTeams, onSaveTeams, onBack }) {
                      <span key={i} className="text-[10px] bg-[var(--bg-card)] px-2 py-1 rounded border border-[var(--color-border)]">{p}</span>
                    ))}
                  </div>
-                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                 <div className="absolute top-4 right-4 flex gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all">
                    <button onClick={() => editTeam(team.id)} className="text-xs font-bold text-blue-500 bg-blue-500/10 px-3 py-1 rounded shadow-sm">Edit</button>
                    <button onClick={() => deleteSavedTeam(team.id)} className="text-xs font-bold text-red-500 bg-red-500/10 px-3 py-1 rounded shadow-sm">Delete</button>
                  </div>
