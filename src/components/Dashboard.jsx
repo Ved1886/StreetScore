@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export default function Dashboard({ onNewMatch, onManageTeams, onJoinLive, matchCount }) {
   const [liveCode, setLiveCode] = useState('');
+  return (
     <div className="relative text-center py-12 px-6 animate-fade-in-up flex flex-col items-center justify-center min-h-[60vh]">
       {/* Background glow effects */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[var(--color-primary)]/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
