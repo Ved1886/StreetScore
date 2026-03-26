@@ -110,7 +110,7 @@ export default function TeamSetup({ onStartMatch, initialTeams }) {
       <div className="w-full max-w-2xl">
         {/* Title */}
         <div className="text-center mb-8 animate-fade-in-up">
-          <span className="text-5xl mb-3 block animate-logo-bounce">🏏</span>
+          <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-4 rounded-2xl shadow-lg border border-[var(--color-border)] object-cover" />
           <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] bg-clip-text text-transparent mb-2"
               style={{ fontFamily: 'var(--font-display)' }}>
             StreetScore

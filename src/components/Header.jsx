@@ -8,9 +8,7 @@ export default function Header({ darkMode, toggleDarkMode, soundOn, toggleSound 
     <header className="flex items-center justify-between py-3 mb-2">
       {/* Logo */}
       <div className="flex items-center gap-2.5">
-        <span className="text-3xl animate-logo-bounce" role="img" aria-label="cricket">
-          🏏
-        </span>
+        <img src="/logo.png" alt="Logo" className="w-8 h-8 rounded-lg shadow-md border border-[var(--color-border)] object-cover" />
         <h1 className="text-lg sm:text-xl font-extrabold tracking-tight bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] bg-clip-text text-transparent">
           StreetScore
         </h1>
