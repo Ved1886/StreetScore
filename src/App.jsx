@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import axios from 'axios';
-import { nanoid } from 'nanoid';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import TeamSetup from './components/TeamSetup';
@@ -108,7 +107,10 @@ export default function App() {
 
   // Dashboard → Team Setup
   const startNewMatch = (type = 'standard', isLive = false) => {
-    setM({ ...DEFAULT, screen: 'teamSetup', matchType: type, liveId: isLive ? nanoid(6).toUpperCase() : null });
+    // Failsafe 6-char code
+    const code = isLive ? Math.random().toString(36).substring(2, 8).toUpperCase() : null;
+    setM({ ...DEFAULT, screen: 'teamSetup', matchType: type, liveId: code });
+    if (code) showPop('Live Sharing Enabled!', 'success');
   };
 
   // Watch Live
@@ -125,10 +127,20 @@ export default function App() {
     }
   };
 
-  // Live Sync Push
+  // Live Sync Push (Throttle to avoid rate limits)
+  const lastSync = useRef(0);
   useEffect(() => {
     if (m.liveId && !m.isViewer && m.screen !== 'dashboard') {
-      axios.post(`https://api.npoint.io/${m.liveId}`, m).catch(() => {});
+      const now = Date.now();
+      if (now - lastSync.current < 1000) return; // Sync at most once per second
+      lastSync.current = now;
+      
+      // Using npoint as a key-value store. 
+      // Note: First push might fail if ID doesn't exist, but npoint usually 
+      // allows writing to any ID via POST to its specific endpoint.
+      axios.post(`https://api.npoint.io/${m.liveId}`, m).catch(err => {
+        console.error("Sync Error", err);
+      });
     }
   }, [m]);
 
@@ -424,7 +436,14 @@ export default function App() {
         {/* ===== TEAM SETUP ===== */}
         {m.screen === 'teamSetup' && (
           <>
-            <button onClick={() => goTo('dashboard')} className="text-sm font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-primary)] mb-4 cursor-pointer">← Back</button>
+            <div className="flex justify-between items-center mb-4">
+              <button onClick={() => goTo('dashboard')} className="text-sm font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-primary)] cursor-pointer">← Back</button>
+              {m.liveId && (
+                <div className="bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full animate-pulse">
+                  LIVE CODE: {m.liveId}
+                </div>
+              )}
+            </div>
             <TeamSetup
               onStartMatch={teamsReady}
               initialTeams={{ teamAName: m.teamA, teamAPlayers: m.teamAPlayers, teamBName: m.teamB, teamBPlayers: m.teamBPlayers }}
