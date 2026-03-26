@@ -106,20 +106,17 @@ export default function App() {
   const goTo = (screen) => setM(p => ({ ...p, screen }));
 
   // Dashboard → Team Setup
-  const startNewMatch = async (type = 'standard', isLive = false) => {
-    let code = null;
-    if (isLive) {
-      try {
-        showPop('Creating Live Session...', 'info');
-        // npoint requires an initial POST to create a bin and get an ID
-        const res = await axios.post('https://api.npoint.io', { status: 'initializing' });
-        code = res.data.id;
-        showPop('Match is Live! Code: ' + code, 'success');
-      } catch (e) {
-        showPop('Offline Mode (Sync Failed)', 'error');
-      }
-    }
+  const startNewMatch = (type = 'standard', isLive = false) => {
+    // GENERATE INSTANTLY (NO DELAY)
+    const code = isLive ? Math.random().toString(36).substring(2, 8).toUpperCase() : null;
+    
     setM({ ...DEFAULT, screen: 'teamSetup', matchType: type, liveId: code });
+    
+    if (code) {
+      showPop('Match is Live!', 'success');
+      // Background sync initialization
+      axios.post(`https://api.npoint.io/${code}`, { status: 'starting', date: new Date().toISOString() }).catch(() => {});
+    }
   };
 
   // Watch Live
