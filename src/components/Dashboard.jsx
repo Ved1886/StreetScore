@@ -36,12 +36,12 @@ export default function Dashboard({ onNewMatch, onManageTeams, onJoinLive, match
           </span>
         </button>
         <button
-          onClick={() => onNewMatch('street')}
+          onClick={() => onNewMatch('street', true)}
           className="relative group px-12 py-3 rounded-[20px] text-lg font-black bg-[var(--color-surface-card)] border-2 border-[var(--color-primary)] text-[var(--color-primary)] shadow-lg hover:-translate-y-1 active:scale-[0.97] transition-all"
         >
           <span className="relative z-10 flex flex-col items-center justify-center">
             <span className="flex items-center gap-2">🚀 Street Match</span>
-            <span className="text-[10px] font-bold opacity-80 mt-1 uppercase tracking-widest">No Wide/NB Extras</span>
+            <span className="text-[10px] font-bold opacity-80 mt-1 uppercase tracking-widest leading-none">Auto Live / No Extras</span>
           </span>
         </button>
 
@@ -52,14 +52,7 @@ export default function Dashboard({ onNewMatch, onManageTeams, onJoinLive, match
           <span className="flex items-center justify-center gap-2">👥 Manage Teams</span>
         </button>
 
-        <div className="h-[1px] bg-gradient-to-r from-transparent via-[var(--color-border)] to-transparent my-2"></div>
 
-        <button
-          onClick={() => onNewMatch('street', true)}
-          className="relative group px-12 py-3 rounded-[20px] text-lg font-black bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg hover:-translate-y-1 active:scale-[0.97] transition-all"
-        >
-          <span className="flex items-center justify-center gap-2">🔴 Go Live (Cheat-Proof)</span>
-        </button>
 
         <div className="flex gap-2">
           <input 
