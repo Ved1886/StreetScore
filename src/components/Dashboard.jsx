@@ -1,7 +1,9 @@
 /* Dashboard.jsx — Landing page with "New Match" button */
 
-export default function Dashboard({ onNewMatch, onManageTeams, matchCount }) {
-  return (
+import { useState } from 'react';
+
+export default function Dashboard({ onNewMatch, onManageTeams, onJoinLive, matchCount }) {
+  const [liveCode, setLiveCode] = useState('');
     <div className="relative text-center py-12 px-6 animate-fade-in-up flex flex-col items-center justify-center min-h-[60vh]">
       {/* Background glow effects */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[var(--color-primary)]/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
@@ -48,6 +50,30 @@ export default function Dashboard({ onNewMatch, onManageTeams, matchCount }) {
         >
           <span className="flex items-center justify-center gap-2">👥 Manage Teams</span>
         </button>
+
+        <div className="h-[1px] bg-gradient-to-r from-transparent via-[var(--color-border)] to-transparent my-2"></div>
+
+        <button
+          onClick={() => onNewMatch('street', true)}
+          className="relative group px-12 py-3 rounded-[20px] text-lg font-black bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg hover:-translate-y-1 active:scale-[0.97] transition-all"
+        >
+          <span className="flex items-center justify-center gap-2">🔴 Go Live (Cheat-Proof)</span>
+        </button>
+
+        <div className="flex gap-2">
+          <input 
+            value={liveCode}
+            onChange={e => setLiveCode(e.target.value.toUpperCase())}
+            placeholder="Enter Match Code"
+            className="flex-1 bg-[var(--color-surface-dim)] border border-[var(--color-border)] rounded-xl px-4 py-2 text-sm font-bold text-[var(--color-text)] focus:border-[var(--color-primary)]"
+          />
+          <button 
+            onClick={() => onJoinLive(liveCode)}
+            className="bg-[var(--color-primary)] text-white px-4 py-2 rounded-xl font-bold text-sm hover:opacity-90"
+          >
+            Join Live
+          </button>
+        </div>
       </div>
 
       {matchCount > 0 && (

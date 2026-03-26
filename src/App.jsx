@@ -1,4 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import axios from 'axios';
+import { nanoid } from 'nanoid';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import TeamSetup from './components/TeamSetup';
@@ -48,6 +50,8 @@ const DEFAULT = {
   history: [], ballLog: [],
   firstInningsData: null, matchResult: null,
   pendingSelections: [], // ['batsman'] or ['bowler'] or ['batsman','bowler']
+  liveId: null, // For remote sync
+  isViewer: false,
 };
 
 // Sound helper
@@ -103,9 +107,46 @@ export default function App() {
   const goTo = (screen) => setM(p => ({ ...p, screen }));
 
   // Dashboard → Team Setup
-  const startNewMatch = (type = 'standard') => setM({ ...DEFAULT, screen: 'teamSetup', matchType: type });
+  const startNewMatch = (type = 'standard', isLive = false) => {
+    setM({ ...DEFAULT, screen: 'teamSetup', matchType: type, liveId: isLive ? nanoid(6).toUpperCase() : null });
+  };
 
-  // Team Setup → Match Config
+  // Watch Live
+  const joinLive = async (code) => {
+    if (!code) return;
+    try {
+      const res = await axios.get(`https://api.npoint.io/${code}`);
+      if (res.data) {
+        setM({ ...res.data, screen: 'scoring', isViewer: true, liveId: code });
+        showPop('Connected to Live Score!', 'success');
+      }
+    } catch (e) {
+      showPop('Match not found!', 'error');
+    }
+  };
+
+  // Live Sync Push
+  useEffect(() => {
+    if (m.liveId && !m.isViewer && m.screen !== 'dashboard') {
+      axios.post(`https://api.npoint.io/${m.liveId}`, m).catch(() => {});
+    }
+  }, [m]);
+
+  // Live Sync Pull (for viewers)
+  useEffect(() => {
+    let interval;
+    if (m.isViewer && m.liveId) {
+      interval = setInterval(async () => {
+        try {
+          const res = await axios.get(`https://api.npoint.io/${m.liveId}`);
+          if (res.data && JSON.stringify(res.data) !== JSON.stringify(m)) {
+            setM(p => ({ ...res.data, isViewer: true, liveId: p.liveId, screen: p.screen })); // Keep local focus
+          }
+        } catch (e) {}
+      }, 3000);
+    }
+    return () => clearInterval(interval);
+  }, [m.isViewer, m.liveId]);
   const teamsReady = (data) => setM(p => ({
     ...p, screen: 'matchConfig',
     teamA: data.teamAName, teamB: data.teamBName,
@@ -353,13 +394,21 @@ export default function App() {
       {modalProps && <PlayerSelectModal {...modalProps} onSelect={selectPlayer} />}
 
       <div className="max-w-2xl mx-auto px-4 pt-4 sm:px-6">
-        <Header darkMode={darkMode} toggleDarkMode={() => setDarkMode(d => !d)} soundOn={soundOn} toggleSound={() => setSoundOn(s => !s)} />
+        <Header 
+          darkMode={darkMode} 
+          toggleDarkMode={() => setDarkMode(d => !d)} 
+          soundOn={soundOn} 
+          toggleSound={() => setSoundOn(s => !s)} 
+          liveId={m.liveId}
+          isViewer={m.isViewer}
+        />
 
         {/* ===== DASHBOARD ===== */}
         {m.screen === 'dashboard' && (
           <Dashboard
             onNewMatch={startNewMatch}
             onManageTeams={() => goTo('manageTeams')}
+            onJoinLive={joinLive}
             matchCount={hist.length}
           />
         )}
@@ -403,29 +452,37 @@ export default function App() {
               maxWickets={battingPlayers.length}
             />
             <BallTimeline ballLog={m.ballLog} />
-            <Controls
-              onAddRuns={(r) => processBall('run', r)} onWicket={() => processBall('wicket')}
-              onWide={() => processBall('wide')} onNoBall={(r = 0) => processBall('noball', r)}
-              onUndo={undo}
-              onReset={() => setConfirm({ message: 'Reset match? You will return to dashboard.', onConfirm: reset })}
-              onEndInnings={() => setConfirm({
-                message: m.innings === 1 ? `End 1st innings? ${battingTeamName}: ${m.runs}/${m.wickets}` : 'End match? This will save the result.',
-                onConfirm: () => {
-                  setConfirm(null);
-                  if (m.innings === 1) {
-                    setM(p => ({
-                      ...p, screen: 'inningsBreak',
-                      firstInningsData: { team: battingTeamName, runs: p.runs, wickets: p.wickets, balls: p.balls, batsmanStats: p.batsmanStats, bowlerStats: p.bowlerStats },
-                    }));
-                  } else {
-                    const res = getResult(m, m.runs, m.wickets);
-                    setM(p => ({ ...p, screen: 'matchResult', matchResult: res }));
-                  }
-                },
-              })}
-              canUndo={m.history.length > 0 && m.pendingSelections.length === 0}
-              allOut={m.wickets >= battingPlayers.length}
-            />
+            {!m.isViewer ? (
+              <Controls
+                onAddRuns={(r) => processBall('run', r)} onWicket={() => processBall('wicket')}
+                onWide={() => processBall('wide')} onNoBall={(r = 0) => processBall('noball', r)}
+                onUndo={undo}
+                onReset={() => setConfirm({ message: 'Reset match? You will return to dashboard.', onConfirm: reset })}
+                onEndInnings={() => setConfirm({
+                  message: m.innings === 1 ? `End 1st innings? ${battingTeamName}: ${m.runs}/${m.wickets}` : 'End match? This will save the result.',
+                  onConfirm: () => {
+                    setConfirm(null);
+                    if (m.innings === 1) {
+                      setM(p => ({
+                        ...p, screen: 'inningsBreak',
+                        firstInningsData: { team: battingTeamName, runs: p.runs, wickets: p.wickets, balls: p.balls, batsmanStats: p.batsmanStats, bowlerStats: p.bowlerStats },
+                      }));
+                    } else {
+                      const res = getResult(m, m.runs, m.wickets);
+                      setM(p => ({ ...p, screen: 'matchResult', matchResult: res }));
+                    }
+                  },
+                })}
+                canUndo={m.history.length > 0 && m.pendingSelections.length === 0}
+                allOut={m.wickets >= battingPlayers.length}
+              />
+            ) : (
+              <div className="glass-card rounded-2xl p-6 text-center animate-fade-in-up mt-4">
+                <p className="text-[var(--color-primary)] font-black text-lg mb-1">👀 Viewer Mode</p>
+                <p className="text-sm text-[var(--color-text-muted)]">You are watching this match live. Score updates automatically!</p>
+                <button onClick={reset} className="mt-4 text-xs font-bold text-[var(--color-text-muted)] hover:text-[var(--color-primary)]">Exit Match</button>
+              </div>
+            )}
           </>
         )}
 
