@@ -106,11 +106,20 @@ export default function App() {
   const goTo = (screen) => setM(p => ({ ...p, screen }));
 
   // Dashboard → Team Setup
-  const startNewMatch = (type = 'standard', isLive = false) => {
-    // Failsafe 6-char code
-    const code = isLive ? Math.random().toString(36).substring(2, 8).toUpperCase() : null;
+  const startNewMatch = async (type = 'standard', isLive = false) => {
+    let code = null;
+    if (isLive) {
+      try {
+        showPop('Creating Live Session...', 'info');
+        // npoint requires an initial POST to create a bin and get an ID
+        const res = await axios.post('https://api.npoint.io', { status: 'initializing' });
+        code = res.data.id;
+        showPop('Match is Live! Code: ' + code, 'success');
+      } catch (e) {
+        showPop('Offline Mode (Sync Failed)', 'error');
+      }
+    }
     setM({ ...DEFAULT, screen: 'teamSetup', matchType: type, liveId: code });
-    if (code) showPop('Live Sharing Enabled!', 'success');
   };
 
   // Watch Live
@@ -135,12 +144,10 @@ export default function App() {
       if (now - lastSync.current < 1000) return; // Sync at most once per second
       lastSync.current = now;
       
-      // Using npoint as a key-value store. 
-      // Note: First push might fail if ID doesn't exist, but npoint usually 
-      // allows writing to any ID via POST to its specific endpoint.
-      axios.post(`https://api.npoint.io/${m.liveId}`, m).catch(err => {
-        console.error("Sync Error", err);
-      });
+      // Using axios.post to npoint endpoint usually creates new. 
+      // For updates, the npoint documentation recommends POST to same URL or individual key updates.
+      // We will POST the entire state to the bin ID.
+      axios.post(`https://api.npoint.io/${m.liveId}`, m).catch(() => {});
     }
   }, [m]);
 
