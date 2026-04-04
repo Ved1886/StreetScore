@@ -87,7 +87,7 @@ export default function App() {
 
   // ---- Live Firestore Sync ----
   useEffect(() => {
-    if (m.screen !== 'scoring' && m.screen !== 'inningsBreak') return;
+    if (m.screen !== 'scoring' && m.screen !== 'inningsBreak' && m.screen !== 'matchResult') return;
     if (!m.shareCode) return;
     const liveData = {
       battingTeam: m.battingTeamKey === 'A' ? m.teamA : m.teamB,
@@ -100,8 +100,10 @@ export default function App() {
       matchResult: m.matchResult || null,
       updatedAt: new Date(),
     };
-    setDoc(doc(db, 'liveMatches', m.shareCode), liveData).catch(() => {});
-  }, [m.runs, m.wickets, m.balls, m.innings, m.screen, m.shareCode]);
+    setDoc(doc(db, 'liveMatches', m.shareCode), liveData)
+      .then(() => console.log('✅ Live sync OK:', m.shareCode))
+      .catch((e) => console.error('❌ Firestore sync failed:', e.code, e.message));
+  }, [m.runs, m.wickets, m.balls, m.innings, m.screen, m.shareCode, m.matchResult]);
 
   const flash = useCallback(() => { setScoreAnim(true); setTimeout(() => setScoreAnim(false), 350); }, []);
   const showPop = useCallback((t, tp) => { setPopup({ text: t, type: tp }); setTimeout(() => setPopup(null), 650); }, []);
