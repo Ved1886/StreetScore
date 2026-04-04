@@ -14,6 +14,8 @@ import ConfirmModal from './components/ConfirmModal';
 import PlayerSelectModal from './components/PlayerSelectModal';
 import ManageTeams from './components/ManageTeams';
 import Auth from './components/Auth';
+import { db } from './firebase';
+import { collection, addDoc } from 'firebase/firestore';
 
 /* ============================================
    App.jsx — Multi-screen cricket scorer
@@ -329,11 +331,28 @@ export default function App() {
         secondInnings: { runs: m.runs, wickets: m.wickets, balls: m.balls },
         result: m.matchResult,
       };
+      
+      const saveToFirebase = async () => {
+        if (user && user.uid && !user.guest) {
+          try {
+            await addDoc(collection(db, 'matches'), {
+              ...entry,
+              userId: user.uid,
+              createdAt: new Date()
+            });
+          } catch (e) {
+            console.error("Error adding document: ", e);
+          }
+        }
+      };
+
+      saveToFirebase();
+
       const nh = [entry, ...hist].slice(0, 20);
       setHist(nh); save(LS_HIST, nh);
       setM(p => ({ ...p, _saved: true }));
     }
-  }, [m.screen, m.matchResult, m._saved, hist]);
+  }, [m.screen, m.matchResult, m._saved, hist, user]);
 
   // ---- Reset ----
   const reset = useCallback(() => { setM({ ...DEFAULT }); save(LS_KEY, { ...DEFAULT }); setConfirm(null); }, []);

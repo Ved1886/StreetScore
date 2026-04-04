@@ -1,15 +1,32 @@
 import { useState } from 'react';
+import { auth } from '../firebase';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function Auth({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (email) {
-      // Basic stub login/signup
-      onLogin({ email: email, name: email.split('@')[0], guest: false });
+    if (!email || !password) return;
+    
+    setLoading(true);
+    setError('');
+    
+    try {
+      if (isLogin) {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        onLogin({ email: userCredential.user.email, name: userCredential.user.email.split('@')[0], guest: false, uid: userCredential.user.uid });
+      } else {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        onLogin({ email: userCredential.user.email, name: userCredential.user.email.split('@')[0], guest: false, uid: userCredential.user.uid });
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -27,6 +44,12 @@ export default function Auth({ onLogin }) {
             {isLogin ? 'Sign in to access your matches.' : 'Sign up to sync your scores.'}
           </p>
         </div>
+
+        {error && (
+          <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold text-center">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
@@ -54,11 +77,12 @@ export default function Auth({ onLogin }) {
 
           <button
             type="submit"
-            className="mt-2 relative group w-full py-4 rounded-[20px] text-lg font-black bg-gradient-to-r from-[var(--color-primary)] to-indigo-500 text-white shadow-lg shadow-[var(--color-primary)]/30 hover:shadow-[var(--color-primary)]/50 active:scale-[0.98] transition-all overflow-hidden"
+            disabled={loading}
+            className="mt-2 relative group w-full py-4 rounded-[20px] text-lg font-black bg-gradient-to-r from-[var(--color-primary)] to-indigo-500 text-white shadow-lg shadow-[var(--color-primary)]/30 hover:shadow-[var(--color-primary)]/50 active:scale-[0.98] transition-all overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed"
           >
             <div className="absolute inset-0 translate-x-[-150%] skew-x-[-20deg] group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
             <span className="relative z-10 flex items-center justify-center gap-2">
-              {isLogin ? '🚀 Sign In' : '✨ Sign Up'}
+              {loading ? 'Processing...' : (isLogin ? '🚀 Sign In' : '✨ Sign Up')}
             </span>
           </button>
         </form>

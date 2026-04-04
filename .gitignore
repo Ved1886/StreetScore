@@ -22,3 +22,9 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment & Sensitive
+.env
+.env.*
+streetscoore-firebase-adminsdk-fbsvc-*.json
+verifyUsers.js
