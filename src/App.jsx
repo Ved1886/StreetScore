@@ -15,7 +15,8 @@ import PlayerSelectModal from './components/PlayerSelectModal';
 import ManageTeams from './components/ManageTeams';
 import Auth from './components/Auth';
 import { db } from './firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { nanoid } from 'nanoid';
 
 /* ============================================
    App.jsx — Multi-screen cricket scorer
@@ -51,6 +52,7 @@ const DEFAULT = {
   history: [], ballLog: [],
   firstInningsData: null, matchResult: null,
   pendingSelections: [], // ['batsman'] or ['bowler'] or ['batsman','bowler']
+  shareCode: null,
 };
 
 // Sound helper
@@ -82,6 +84,24 @@ export default function App() {
   useEffect(() => { save('streetscore_sound', soundOn); }, [soundOn]);
   useEffect(() => { save(LS_KEY, m); }, [m]);
   useEffect(() => { save('streetscore_teams', savedTeams); }, [savedTeams]);
+
+  // ---- Live Firestore Sync ----
+  useEffect(() => {
+    if (m.screen !== 'scoring' && m.screen !== 'inningsBreak') return;
+    if (!m.shareCode) return;
+    const liveData = {
+      battingTeam: m.battingTeamKey === 'A' ? m.teamA : m.teamB,
+      bowlingTeam: m.battingTeamKey === 'A' ? m.teamB : m.teamA,
+      runs: m.runs, wickets: m.wickets, balls: m.balls,
+      totalOvers: m.totalOvers, extras: m.extras, innings: m.innings,
+      striker: m.striker, nonStriker: m.nonStriker, currentBowler: m.currentBowler,
+      batsmanStats: m.batsmanStats, bowlerStats: m.bowlerStats,
+      ballLog: m.ballLog, firstInningsData: m.firstInningsData || null,
+      matchResult: m.matchResult || null,
+      updatedAt: new Date(),
+    };
+    setDoc(doc(db, 'liveMatches', m.shareCode), liveData).catch(() => {});
+  }, [m.runs, m.wickets, m.balls, m.innings, m.screen, m.shareCode]);
 
   const flash = useCallback(() => { setScoreAnim(true); setTimeout(() => setScoreAnim(false), 350); }, []);
   const showPop = useCallback((t, tp) => { setPopup({ text: t, type: tp }); setTimeout(() => setPopup(null), 650); }, []);
@@ -124,6 +144,7 @@ export default function App() {
     const bs = {}; bPlayers.forEach(p => { bs[p] = newBatStats(); });
     const blPlayers = bKey === 'A' ? m.teamBPlayers : m.teamAPlayers;
     const bw = {}; blPlayers.forEach(p => { bw[p] = newBowlStats(); });
+    const shareCode = nanoid(6).toUpperCase();
     setM(p => ({
       ...p, screen: 'scoring', totalOvers: cfg.totalOvers,
       battingTeamKey: bKey, striker: cfg.striker, nonStriker: cfg.nonStriker,
@@ -132,7 +153,8 @@ export default function App() {
       runs: 0, wickets: 0, balls: 0, extras: 0,
       innings: 1, history: [], ballLog: [], pendingSelections: [],
       firstInningsData: null, matchResult: null,
-      matchType: p.matchType, // Preserve matchType from previous state
+      matchType: p.matchType,
+      shareCode,
     }));
   };
 
@@ -505,6 +527,12 @@ export default function App() {
               canUndo={m.history.length > 0 && m.pendingSelections.length === 0}
               allOut={m.wickets >= battingPlayers.length}
             />
+
+            {/* Share Score Link */}
+            {m.shareCode && (
+              <ShareCard shareCode={m.shareCode} />
+            )}
+
             <BallTimeline ballLog={m.ballLog} />
           </>
         )}
@@ -534,6 +562,44 @@ export default function App() {
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+function ShareCard({ shareCode }) {
+  const [copied, setCopied] = useState(false);
+  const liveUrl = `${window.location.origin}/?live=${shareCode}`;
+
+  const copy = () => {
+    navigator.clipboard.writeText(liveUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <div className="my-3 p-4 glass-card rounded-2xl border border-[var(--color-primary)]/20 flex flex-col gap-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="w-2 h-2 bg-[var(--color-accent-red)] rounded-full animate-pulse" />
+          <span className="text-xs font-black uppercase tracking-wider text-[var(--color-text-secondary)]">Share Live Score</span>
+        </div>
+        <span className="text-lg font-black text-[var(--color-primary)] tracking-widest">{shareCode}</span>
+      </div>
+      <div className="flex items-center gap-2">
+        <input
+          readOnly
+          value={liveUrl}
+          className="flex-1 text-[10px] font-semibold px-3 py-2 rounded-xl bg-[var(--color-surface-dim)] border border-[var(--color-border)] text-[var(--color-text-muted)] outline-none truncate"
+        />
+        <button
+          onClick={copy}
+          className="px-4 py-2 rounded-xl text-xs font-black bg-gradient-to-r from-[var(--color-primary)] to-indigo-500 text-white shadow-md hover:shadow-lg active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+        >
+          {copied ? '✓ Copied!' : '📋 Copy'}
+        </button>
+      </div>
+      <p className="text-[10px] text-[var(--color-text-muted)] text-center">Friends can view live score — they cannot change anything.</p>
     </div>
   );
 }
