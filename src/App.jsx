@@ -14,8 +14,9 @@ import ConfirmModal from './components/ConfirmModal';
 import PlayerSelectModal from './components/PlayerSelectModal';
 import ManageTeams from './components/ManageTeams';
 import Auth from './components/Auth';
-import { db } from './firebase';
-import { collection, addDoc, doc, setDoc } from 'firebase/firestore';
+import { db, rtdb } from './firebase';
+import { collection, addDoc } from 'firebase/firestore';
+import { ref, set } from 'firebase/database';
 import { nanoid } from 'nanoid';
 
 /* ============================================
@@ -85,7 +86,7 @@ export default function App() {
   useEffect(() => { save(LS_KEY, m); }, [m]);
   useEffect(() => { save('streetscore_teams', savedTeams); }, [savedTeams]);
 
-  // ---- Live Firestore Sync ----
+  // ---- Live Realtime Database Sync (free - no billing needed) ----
   useEffect(() => {
     if (m.screen !== 'scoring' && m.screen !== 'inningsBreak' && m.screen !== 'matchResult') return;
     if (!m.shareCode) return;
@@ -98,11 +99,11 @@ export default function App() {
       batsmanStats: m.batsmanStats, bowlerStats: m.bowlerStats,
       ballLog: m.ballLog, firstInningsData: m.firstInningsData || null,
       matchResult: m.matchResult || null,
-      updatedAt: new Date(),
+      updatedAt: Date.now(),
     };
-    setDoc(doc(db, 'liveMatches', m.shareCode), liveData)
+    set(ref(rtdb, `liveMatches/${m.shareCode}`), liveData)
       .then(() => console.log('✅ Live sync OK:', m.shareCode))
-      .catch((e) => console.error('❌ Firestore sync failed:', e.code, e.message));
+      .catch((e) => console.error('❌ RTDB sync failed:', e.code, e.message));
   }, [m.runs, m.wickets, m.balls, m.innings, m.screen, m.shareCode, m.matchResult]);
 
   const flash = useCallback(() => { setScoreAnim(true); setTimeout(() => setScoreAnim(false), 350); }, []);

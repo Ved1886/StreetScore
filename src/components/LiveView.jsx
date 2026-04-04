@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { db } from '../firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { rtdb } from '../firebase';
+import { ref, onValue } from 'firebase/database';
 import BallTimeline from './BallTimeline';
 
 export default function LiveView({ matchCode }) {
@@ -9,10 +9,10 @@ export default function LiveView({ matchCode }) {
 
   useEffect(() => {
     if (!matchCode) return;
-    const ref = doc(db, 'liveMatches', matchCode.toUpperCase());
-    const unsub = onSnapshot(ref, (snap) => {
+    const matchRef = ref(rtdb, `liveMatches/${matchCode.toUpperCase()}`);
+    const unsub = onValue(matchRef, (snap) => {
       if (snap.exists()) {
-        setData(snap.data());
+        setData(snap.val());
         setNotFound(false);
       } else {
         setNotFound(true);
