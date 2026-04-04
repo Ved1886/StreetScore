@@ -43,8 +43,7 @@ function ScoreButton({ label, subLabel, onClick, className, id }) {
 export default function Controls({
   onAddRuns,
   onWicket,
-  onWide,
-  onNoBall,
+  onRotateStrike,
   onUndo,
   onReset,
   onEndInnings,
@@ -57,29 +56,34 @@ export default function Controls({
   const sixStyle = 'bg-gradient-to-br from-[#ffeaa7] to-[#fdcb6e] text-[#6d5200] border-2 border-transparent hover:shadow-[0_6px_20px_rgba(253,203,110,0.4)]';
   const dotStyle = 'bg-[var(--color-surface-dim)] text-[var(--color-text-secondary)] border-2 border-[var(--color-border)] hover:border-[var(--color-text-muted)] hover:shadow-md';
   const wicketStyle = 'bg-gradient-to-br from-[#ff7675] to-[#e17055] text-white border-2 border-transparent hover:shadow-[0_6px_20px_rgba(225,112,85,0.35)]';
-  const extrasStyle = 'bg-gradient-to-br from-[#74b9ff] to-[#0984e3] text-white border-2 border-transparent hover:shadow-[0_6px_20px_rgba(9,132,227,0.3)]';
+  const rotateStyle = 'bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] text-white border-2 border-transparent hover:shadow-[0_6px_20px_rgba(108,92,231,0.35)] dark:from-[#6c5ce7] dark:to-[#8c7ae6]';
 
-  const [nbMode, setNbMode] = useState(false);
+  const [rotateMode, setRotateMode] = useState(false);
 
-  if (nbMode) {
+  if (rotateMode) {
     return (
       <div className="glass-card rounded-2xl p-5 mb-4 animate-fade-in-up border-2 border-[var(--color-primary)]">
         <h3 className="text-sm font-black uppercase tracking-widest text-[var(--color-primary)] mb-4 text-center drop-shadow-sm">
-          Runs off the No Ball?
+          Is this a valid ball?
         </h3>
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {[0, 1, 2, 3, 4, 6].map(r => (
-            <ScoreButton
-              key={r}
-              id={`btn-nb-${r}`}
-              label={`Nb+${r}`}
-              onClick={() => { setNbMode(false); onNoBall(r); }}
-              className="bg-[var(--color-surface-card)] border-2 border-[#0984e3]/50 text-[var(--color-text)] hover:bg-[#0984e3]/10"
-            />
-          ))}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <ScoreButton
+            id="btn-rotate-valid"
+            label="Yes"
+            subLabel="Valid Ball (+1)"
+            onClick={() => { setRotateMode(false); onRotateStrike(true); }}
+            className="bg-[var(--color-surface-card)] border-2 border-[#00b894]/50 text-[var(--color-text)] hover:bg-[#00b894]/10"
+          />
+          <ScoreButton
+            id="btn-rotate-invalid"
+            label="No"
+            subLabel="Mistake (0)"
+            onClick={() => { setRotateMode(false); onRotateStrike(false); }}
+            className="bg-[var(--color-surface-card)] border-2 border-[#e17055]/50 text-[var(--color-text)] hover:bg-[#e17055]/10"
+          />
         </div>
         <button
-          onClick={() => setNbMode(false)}
+          onClick={() => setRotateMode(false)}
           className="w-full py-4 rounded-xl border-2 border-[var(--color-border)] text-sm font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-surface-dim)] hover:text-[var(--color-text)] transition-colors"
         >
           Cancel
@@ -95,7 +99,7 @@ export default function Controls({
       </h3>
 
       {/* Main Scoring Grid */}
-      <div className="grid grid-cols-4 gap-2.5 sm:gap-3 mb-3">
+      <div className="grid grid-cols-4 gap-2.5 sm:gap-3 mb-4">
         <ScoreButton id="btn-dot" label="0" subLabel="Dot" onClick={() => onAddRuns(0)} className={dotStyle} />
         <ScoreButton id="btn-1" label="+1" subLabel="Run" onClick={() => onAddRuns(1)} className={runStyle} />
         <ScoreButton id="btn-2" label="+2" subLabel="Runs" onClick={() => onAddRuns(2)} className={runStyle} />
@@ -103,13 +107,7 @@ export default function Controls({
         <ScoreButton id="btn-4" label="4" subLabel="Four" onClick={() => onAddRuns(4)} className={fourStyle} />
         <ScoreButton id="btn-6" label="6" subLabel="Six" onClick={() => onAddRuns(6)} className={sixStyle} />
         <ScoreButton id="btn-wicket" label="W" subLabel="Wicket" onClick={onWicket} className={wicketStyle} />
-        <ScoreButton id="btn-wide" label="Wd" subLabel="Wide" onClick={onWide} className={extrasStyle} />
-      </div>
-
-      {/* No Ball — spans full width as a smaller row */}
-      <div className="grid grid-cols-2 gap-2.5 sm:gap-3 mb-4">
-        <ScoreButton id="btn-noball" label="Nb" subLabel="No Ball" onClick={() => setNbMode(true)} className={`${extrasStyle} !py-3`} />
-        <div /> {/* spacer */}
+        <ScoreButton id="btn-rotate" label="⇄" subLabel="Rotate" onClick={() => setRotateMode(true)} className={rotateStyle} />
       </div>
 
       {/* Action buttons */}

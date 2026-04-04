@@ -13,6 +13,7 @@ import ScorePopup from './components/ScorePopup';
 import ConfirmModal from './components/ConfirmModal';
 import PlayerSelectModal from './components/PlayerSelectModal';
 import ManageTeams from './components/ManageTeams';
+import Auth from './components/Auth';
 
 /* ============================================
    App.jsx — Multi-screen cricket scorer
@@ -63,6 +64,7 @@ function playSound(t) {
 }
 
 export default function App() {
+  const [user, setUser] = useState(() => load('streetscore_user', null));
   const [m, setM] = useState(() => load(LS_KEY, { ...DEFAULT }));
   const [hist, setHist] = useState(() => load(LS_HIST, []));
   const [popup, setPopup] = useState(null);
@@ -73,6 +75,7 @@ export default function App() {
   const [scoreAnim, setScoreAnim] = useState(false);
 
   // Persist
+  useEffect(() => { save('streetscore_user', user); }, [user]);
   useEffect(() => { document.documentElement.classList.toggle('dark', darkMode); save('streetscore_dark', darkMode); }, [darkMode]);
   useEffect(() => { save('streetscore_sound', soundOn); }, [soundOn]);
   useEffect(() => { save(LS_KEY, m); }, [m]);
@@ -355,14 +358,20 @@ export default function App() {
       <div className="max-w-2xl mx-auto px-4 pt-4 sm:px-6">
         <Header darkMode={darkMode} toggleDarkMode={() => setDarkMode(d => !d)} soundOn={soundOn} toggleSound={() => setSoundOn(s => !s)} />
 
-        {/* ===== DASHBOARD ===== */}
-        {m.screen === 'dashboard' && (
-          <Dashboard
-            onNewMatch={startNewMatch}
-            onManageTeams={() => goTo('manageTeams')}
-            matchCount={hist.length}
-          />
-        )}
+        {!user ? (
+          <Auth onLogin={setUser} />
+        ) : (
+          <>
+            {/* ===== DASHBOARD ===== */}
+            {m.screen === 'dashboard' && (
+              <Dashboard
+                onNewMatch={startNewMatch}
+                onManageTeams={() => goTo('manageTeams')}
+                matchCount={hist.length}
+                user={user}
+                onLogout={() => { setUser(null); reset(); }}
+              />
+            )}
         
         {m.screen === 'manageTeams' && (
           <ManageTeams 
@@ -405,10 +414,58 @@ export default function App() {
               maxWickets={battingPlayers.length}
               liveId={m.liveId}
             />
-            <BallTimeline ballLog={m.ballLog} />
             <Controls
               onAddRuns={(r) => processBall('run', r)} onWicket={() => processBall('wicket')}
-              onWide={() => processBall('wide')} onNoBall={(r = 0) => processBall('noball', r)}
+              onRotateStrike={(isValidBall) => {
+                if (!isValidBall) {
+                  setM(prev => prev.nonStriker !== '' ? { ...prev, striker: prev.nonStriker, nonStriker: prev.striker } : prev);
+                } else {
+                  setM(prev => {
+                    if (prev.pendingSelections.length > 0) return prev;
+                    if (prev.nonStriker === '') return prev;
+                    const snap = JSON.stringify({
+                      runs: prev.runs, wickets: prev.wickets, balls: prev.balls, extras: prev.extras,
+                      striker: prev.striker, nonStriker: prev.nonStriker, currentBowler: prev.currentBowler,
+                      lastBowler: prev.lastBowler, batsmanStats: prev.batsmanStats, bowlerStats: prev.bowlerStats,
+                      outBatsmen: prev.outBatsmen,
+                    });
+                    
+                    let balls = prev.balls + 1;
+                    const bs = JSON.parse(JSON.stringify(prev.batsmanStats));
+                    const bw = JSON.parse(JSON.stringify(prev.bowlerStats));
+                    
+                    if (bs[prev.striker]) bs[prev.striker].balls += 1;
+                    if (bw[prev.currentBowler]) bw[prev.currentBowler].ballsBowled += 1;
+
+                    let striker = prev.nonStriker;
+                    let nonStriker = prev.striker;
+                    
+                    let pending = [];
+                    const overDone = balls > 0 && balls % 6 === 0;
+                    if (overDone) {
+                       [striker, nonStriker] = [nonStriker, striker]; // end-of-over swap back
+                       if (balls < prev.totalOvers * 6) pending.push('bowler');
+                    }
+                    
+                    const maxBalls = prev.totalOvers * 6;
+                    const inningsOver = balls >= maxBalls || (prev.innings === 2 && prev.firstInningsData && prev.runs >= prev.firstInningsData.runs + 1);
+                    
+                    return {
+                      ...prev, balls, striker, nonStriker, batsmanStats: bs, bowlerStats: bw,
+                      pendingSelections: inningsOver ? [] : pending,
+                      history: [...prev.history, { snap }],
+                      ballLog: [...prev.ballLog, { label: '⇄', type: 'dot' }],
+                      screen: inningsOver ? (prev.innings === 1 ? 'inningsBreak' : 'matchResult') : prev.screen,
+                      firstInningsData: inningsOver && prev.innings === 1 ? {
+                        team: prev.battingTeamKey === 'A' ? prev.teamA : prev.teamB,
+                        runs: prev.runs, wickets: prev.wickets, balls, batsmanStats: bs, bowlerStats: bw,
+                      } : prev.firstInningsData,
+                      matchResult: inningsOver && prev.innings === 2 ? getResult(prev, prev.runs, prev.wickets) : prev.matchResult,
+                    };
+                  });
+                  flash();
+                }
+              }}
               onUndo={undo}
               onReset={() => setConfirm({ message: 'Reset match? You will return to dashboard.', onConfirm: reset })}
               onEndInnings={() => setConfirm({
@@ -429,6 +486,7 @@ export default function App() {
               canUndo={m.history.length > 0 && m.pendingSelections.length === 0}
               allOut={m.wickets >= battingPlayers.length}
             />
+            <BallTimeline ballLog={m.ballLog} />
           </>
         )}
 
@@ -453,6 +511,8 @@ export default function App() {
           <footer className="text-center py-6 text-[var(--color-text-muted)] text-xs">
             StreetScore © {new Date().getFullYear()}
           </footer>
+        )}
+          </>
         )}
       </div>
     </div>

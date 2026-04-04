@@ -1,8 +1,16 @@
 /* Dashboard.jsx — Landing page with "New Match" button */
 
-export default function Dashboard({ onNewMatch, onManageTeams, matchCount }) {
+export default function Dashboard({ onNewMatch, onManageTeams, matchCount, user, onLogout }) {
   return (
     <div className="relative text-center py-12 px-6 animate-fade-in-up flex flex-col items-center justify-center min-h-[60vh]">
+      {/* User profile / Logout */}
+      {user && (
+        <div className="absolute top-0 right-0 mt-2 z-20 flex gap-4 items-center">
+          <span className="text-sm font-bold text-[var(--color-text-secondary)]">Hi, {user.name}</span>
+          <button onClick={onLogout} className="text-xs font-bold px-4 py-2 rounded-full bg-[var(--color-surface-dim)] border border-[var(--color-border)] text-[var(--color-accent-red)] hover:bg-[var(--color-accent-red)]/10 transition-colors cursor-pointer">Logout</button>
+        </div>
+      )}
+
       {/* Background glow effects */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-[var(--color-primary)]/20 rounded-full blur-[80px] -z-10 pointer-events-none"></div>
       
