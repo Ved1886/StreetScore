@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { rtdb } from '../firebase';
 import { ref, onValue } from 'firebase/database';
 import BallTimeline from './BallTimeline';
+import ScorecardModal from './ScorecardModal';
 
 export default function LiveView({ matchCode }) {
   const [data, setData] = useState(null);
   const [notFound, setNotFound] = useState(false);
+  const [scorecardInnings, setScorecardInnings] = useState(null);
 
   useEffect(() => {
     if (!matchCode) return;
@@ -65,6 +67,15 @@ export default function LiveView({ matchCode }) {
   const bowlerStat = bowlerStats?.[currentBowler];
   const fmtBowlerOvers = bowlerStat ? `${Math.floor(bowlerStat.ballsBowled / 6)}.${bowlerStat.ballsBowled % 6}` : '0.0';
 
+  const currentInningsData = {
+    team: battingTeam,
+    runs,
+    wickets,
+    balls,
+    batsmanStats,
+    bowlerStats
+  };
+
   return (
     <div className="min-h-screen pb-10 transition-colors duration-300">
       <div className="max-w-2xl mx-auto px-4 pt-4 sm:px-6">
@@ -96,7 +107,26 @@ export default function LiveView({ matchCode }) {
             {totalOvers && <span className="text-[var(--color-text-muted)]">• {totalOvers} ov</span>}
           </div>
 
-          <p className="text-sm font-bold text-[var(--color-primary)] mb-1">{battingTeam}</p>
+          <div className="flex items-center justify-between gap-2 mb-1 px-1">
+            <p className="text-sm font-bold text-[var(--color-primary)] truncate">{battingTeam}</p>
+            
+            <div className="flex gap-1.5">
+              {innings === 2 && firstInningsData && (
+                <button
+                  onClick={() => setScorecardInnings(1)}
+                  className="shrink-0 flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1.5 rounded-lg border-2 border-[var(--color-primary)]/30 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors active:scale-95 cursor-pointer"
+                >
+                  📋 1st Innings
+                </button>
+              )}
+              <button
+                onClick={() => setScorecardInnings(innings)}
+                className="shrink-0 flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1.5 rounded-lg border-2 border-[var(--color-primary)]/30 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors active:scale-95 cursor-pointer"
+              >
+                📋 {innings === 1 ? 'Scorecard' : '2nd Innings'}
+              </button>
+            </div>
+          </div>
 
           <div className="text-6xl sm:text-7xl font-black bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] bg-clip-text text-transparent leading-none mb-3" style={{ fontFamily: 'var(--font-display)' }}>
             {runs}/{wickets}
@@ -188,6 +218,14 @@ export default function LiveView({ matchCode }) {
         <footer className="text-center py-6 text-[var(--color-text-muted)] text-xs">
           StreetScore © {new Date().getFullYear()} · Live View (Read Only)
         </footer>
+
+        {/* Scorecard Modal */}
+        {scorecardInnings === 1 && (
+          <ScorecardModal data={innings === 1 ? currentInningsData : firstInningsData} title="1st Innings Scorecard" onClose={() => setScorecardInnings(null)} />
+        )}
+        {scorecardInnings === 2 && (
+          <ScorecardModal data={currentInningsData} title="2nd Innings Scorecard" onClose={() => setScorecardInnings(null)} />
+        )}
       </div>
     </div>
   );
