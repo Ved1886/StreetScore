@@ -1,8 +1,11 @@
 /* ScoreBoard.jsx — Score display with batsman/bowler info */
+import { useState } from 'react';
+import ScorecardModal from './ScorecardModal';
 
 export default function ScoreBoard({
   battingTeam, runs, wickets, balls, oversDisplay, runRate, extras,
-  innings, scoreAnimating, firstInningsScore, target, runsNeeded, requiredRR,
+  innings, scoreAnimating, firstInningsScore, firstInningsData,
+  target, runsNeeded, requiredRR,
   striker, nonStriker, currentBowler, batsmanStats, bowlerStats, totalOvers,
   maxWickets = 10,
 }) {
@@ -10,6 +13,16 @@ export default function ScoreBoard({
   const nonStrikerStats = batsmanStats?.[nonStriker];
   const bowlerStat = bowlerStats?.[currentBowler];
   const fmtBowlerOvers = bowlerStat ? `${Math.floor(bowlerStat.ballsBowled / 6)}.${bowlerStat.ballsBowled % 6}` : '0.0';
+  const [scorecardInnings, setScorecardInnings] = useState(null); // 1 or 2
+
+  const currentInningsData = {
+    team: battingTeam,
+    runs,
+    wickets,
+    balls,
+    batsmanStats,
+    bowlerStats
+  };
 
   return (
     <div className="glass-card rounded-3xl p-6 sm:p-8 mb-4 text-center animate-fade-in-up relative overflow-hidden">
@@ -20,7 +33,26 @@ export default function ScoreBoard({
         {totalOvers && <span className="text-[var(--color-text-muted)]">• {totalOvers} ov</span>}
       </div>
 
-      <p className="text-sm font-bold text-[var(--color-primary)] mb-1">{battingTeam}</p>
+      <div className="flex items-center justify-between gap-2 mb-1 px-1">
+        <p className="text-sm font-bold text-[var(--color-primary)] truncate">{battingTeam}</p>
+        
+        <div className="flex gap-1.5">
+          {innings === 2 && firstInningsData && (
+            <button
+              onClick={() => setScorecardInnings(1)}
+              className="shrink-0 flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1.5 rounded-lg border-2 border-[var(--color-primary)]/30 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors active:scale-95 cursor-pointer"
+            >
+              📋 1st Innings
+            </button>
+          )}
+          <button
+            onClick={() => setScorecardInnings(innings)}
+            className="shrink-0 flex items-center gap-1 text-[9px] sm:text-[10px] font-bold px-2 py-1.5 rounded-lg border-2 border-[var(--color-primary)]/30 text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 transition-colors active:scale-95 cursor-pointer"
+          >
+            📋 {innings === 1 ? 'Scorecard' : '2nd Innings'}
+          </button>
+        </div>
+      </div>
 
       {/* Main Score */}
       <div className={`text-6xl sm:text-7xl font-black bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] bg-clip-text text-transparent leading-none mb-3 ${scoreAnimating ? 'animate-score-pop' : ''}`}
@@ -88,8 +120,13 @@ export default function ScoreBoard({
             </div>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">Need</p>
-              <p className={`text-xl font-extrabold ${runsNeeded <= 0 ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-accent-red)]'}`}>
-                {runsNeeded > 0 ? runsNeeded : '✓'}
+              <p className={`text-xl font-extrabold flex flex-col justify-center items-center leading-none mt-1 ${runsNeeded <= 0 ? 'text-[var(--color-accent-green)]' : 'text-[var(--color-accent-red)]'}`}>
+                <span>{runsNeeded > 0 ? runsNeeded : '✓'}</span>
+                {runsNeeded > 0 && totalOvers && (
+                  <span className="text-[10px] font-bold text-[var(--color-text-muted)] mt-1 tracking-normal">
+                    in {totalOvers * 6 - balls} balls
+                  </span>
+                )}
               </p>
             </div>
             <div>
@@ -104,6 +141,24 @@ export default function ScoreBoard({
         <div className="mt-4 py-2 px-4 bg-[var(--color-accent-red)]/10 rounded-xl text-[var(--color-accent-red)] text-sm font-bold animate-badge-pop">
           ALL OUT! 🚨
         </div>
+      )}
+
+
+
+      {/* Scorecard Modal */}
+      {scorecardInnings === 1 && (
+        <ScorecardModal 
+          data={innings === 1 ? currentInningsData : firstInningsData} 
+          title="1st Innings Scorecard" 
+          onClose={() => setScorecardInnings(null)} 
+        />
+      )}
+      {scorecardInnings === 2 && (
+        <ScorecardModal 
+          data={currentInningsData} 
+          title="2nd Innings Scorecard" 
+          onClose={() => setScorecardInnings(null)} 
+        />
       )}
     </div>
   );

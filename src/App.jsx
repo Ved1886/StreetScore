@@ -451,6 +451,7 @@ export default function App() {
               oversDisplay={oversDisplay} runRate={runRate} extras={m.extras}
               innings={m.innings} scoreAnimating={scoreAnim}
               firstInningsScore={m.firstInningsData?.runs}
+              firstInningsData={m.firstInningsData}
               target={target} runsNeeded={runsNeeded} requiredRR={requiredRR}
               striker={m.striker} nonStriker={m.nonStriker} currentBowler={m.currentBowler}
               batsmanStats={m.batsmanStats} bowlerStats={m.bowlerStats}
@@ -458,8 +459,14 @@ export default function App() {
               maxWickets={battingPlayers.length}
               liveId={m.liveId}
             />
+
+            <BallTimeline ballLog={m.ballLog} />
+
             <Controls
+              matchType={m.matchType}
               onAddRuns={(r) => processBall('run', r)} onWicket={() => processBall('wicket')}
+              onNoBall={(r) => processBall('noball', r)}
+              onWide={(r) => processBall('wide', r)}
               onRotateStrike={(isValidBall) => {
                 if (!isValidBall) {
                   setM(prev => prev.nonStriker !== '' ? { ...prev, striker: prev.nonStriker, nonStriker: prev.striker } : prev);
@@ -535,8 +542,6 @@ export default function App() {
             {m.shareCode && (
               <ShareCard shareCode={m.shareCode} />
             )}
-
-            <BallTimeline ballLog={m.ballLog} />
           </>
         )}
 

@@ -1,51 +1,101 @@
 /* ============================================
    BallTimeline.jsx — Ball-by-ball display
-   Shows colored badges for each delivery
-   with over separators (| after every 6 balls)
+   Shows ONE over at a time; swipe or tap arrows
+   to navigate previous overs.
    ============================================ */
 
+import { useState, useEffect, useRef } from 'react';
+
 export default function BallTimeline({ ballLog }) {
-  if (ballLog.length === 0) return null;
+  // ---- Split ballLog into overs ----
+  // An over = 6 legal deliveries; wides/noballs are included in the same over
+  const overs = [];
+  let currentOver = [];
+  let legalInOver = 0;
 
-  // Insert over separators after every 6 legal balls
-  // Wide/NoBall don't count as legal, so we track separately
-  const rendered = [];
-  let legalCount = 0;
-
-  ballLog.forEach((ball, i) => {
+  ballLog.forEach((ball) => {
+    currentOver.push(ball);
     const isLegal = ball.type !== 'wide' && ball.type !== 'noball';
-
-    if (isLegal) legalCount++;
-
-    // Add over separator after 6 legal balls (but not at the start)
-    if (isLegal && legalCount > 1 && (legalCount - 1) % 6 === 0) {
-      rendered.push(
-        <span key={`sep-${i}`} className="inline-flex items-center justify-center text-[10px] font-bold text-[var(--color-text-muted)] px-1">
-          |
-        </span>
-      );
+    if (isLegal) legalInOver++;
+    if (isLegal && legalInOver === 6) {
+      overs.push(currentOver);
+      currentOver = [];
+      legalInOver = 0;
     }
-
-    rendered.push(
-      <span
-        key={i}
-        className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold border-2 transition-all duration-200 ${getBadgeStyle(ball.type)} ${
-          i === ballLog.length - 1 ? 'animate-badge-pop' : ''
-        }`}
-      >
-        {ball.label}
-      </span>
-    );
   });
+  if (currentOver.length > 0) overs.push(currentOver);
+
+  const totalOvers = overs.length;
+  const [viewIndex, setViewIndex] = useState(totalOvers - 1);
+
+  // Keep viewIndex on the latest over when a new ball is bowled
+  useEffect(() => {
+    setViewIndex(totalOvers - 1);
+  }, [totalOvers]);
+
+
+  // ---- Swipe / drag to navigate overs ----
+  const dragStartX = useRef(null);
+  const isDragging = useRef(false);
+
+  const onDragStart = (clientX) => {
+    dragStartX.current = clientX;
+    isDragging.current = true;
+  };
+  const onDragEnd = (clientX) => {
+    if (!isDragging.current || dragStartX.current === null) return;
+    const dx = clientX - dragStartX.current;
+    if (Math.abs(dx) > 40) {
+      if (dx > 0) setViewIndex(i => Math.max(0, i - 1));          // swipe right → older
+      else        setViewIndex(i => Math.min(totalOvers - 1, i + 1)); // swipe left → newer
+    }
+    isDragging.current = false;
+    dragStartX.current = null;
+  };
+
+  if (totalOvers === 0) return null;
+
+  const balls = overs[viewIndex] ?? [];
+  const overLabel = viewIndex === totalOvers - 1 ? 'This Over' : `Over ${viewIndex + 1}`;
+  const isLatest = viewIndex === totalOvers - 1;
 
   return (
-    <div className="glass-card rounded-2xl p-5 mb-4 animate-fade-in-up">
-      <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)] mb-3 flex items-center gap-2">
-        📊 This Over
-      </h3>
-      <div className="flex gap-1.5 flex-wrap items-center">
-        {rendered}
+    <div
+      className="glass-card rounded-2xl p-5 mb-4 animate-fade-in-up select-none cursor-grab active:cursor-grabbing"
+      /* Touch */
+      onTouchStart={e => onDragStart(e.touches[0].clientX)}
+      onTouchEnd={e => onDragEnd(e.changedTouches[0].clientX)}
+      /* Mouse drag */
+      onMouseDown={e => onDragStart(e.clientX)}
+      onMouseUp={e => onDragEnd(e.clientX)}
+      onMouseLeave={() => { isDragging.current = false; dragStartX.current = null; }}
+    >
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)] flex items-center gap-2">
+          📊 {overLabel}
+        </h3>
       </div>
+
+
+      {/* Ball badges for the selected over */}
+      <div className="flex gap-1.5 flex-wrap items-center min-h-[2.5rem]">
+        {balls.map((ball, i) => (
+          <span
+            key={i}
+            className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold border-2 transition-all duration-200 ${getBadgeStyle(ball.type)} ${
+              isLatest && i === balls.length - 1 ? 'animate-badge-pop' : ''
+            }`}
+          >
+            {ball.label}
+          </span>
+        ))}
+        {balls.length === 0 && (
+          <span className="text-xs text-[var(--color-text-muted)] italic">No balls yet</span>
+        )}
+      </div>
+
+
     </div>
   );
 }

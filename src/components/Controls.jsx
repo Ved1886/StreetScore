@@ -41,9 +41,12 @@ function ScoreButton({ label, subLabel, onClick, className, id }) {
 }
 
 export default function Controls({
+  matchType,
   onAddRuns,
   onWicket,
   onRotateStrike,
+  onNoBall,
+  onWide,
   onUndo,
   onReset,
   onEndInnings,
@@ -57,8 +60,12 @@ export default function Controls({
   const dotStyle = 'bg-[var(--color-surface-dim)] text-[var(--color-text-secondary)] border-2 border-[var(--color-border)] hover:border-[var(--color-text-muted)] hover:shadow-md';
   const wicketStyle = 'bg-gradient-to-br from-[#ff7675] to-[#e17055] text-white border-2 border-transparent hover:shadow-[0_6px_20px_rgba(225,112,85,0.35)]';
   const rotateStyle = 'bg-gradient-to-br from-[#a29bfe] to-[#6c5ce7] text-white border-2 border-transparent hover:shadow-[0_6px_20px_rgba(108,92,231,0.35)] dark:from-[#6c5ce7] dark:to-[#8c7ae6]';
+  const noBallStyle = 'bg-gradient-to-br from-[#fd79a8] to-[#e84393] text-white border-2 border-transparent hover:shadow-[0_6px_20px_rgba(232,67,147,0.4)]';
+  const wideStyle = 'bg-gradient-to-br from-[#74b9ff] to-[#0984e3] text-white border-2 border-transparent hover:shadow-[0_6px_20px_rgba(9,132,227,0.4)]';
 
   const [rotateMode, setRotateMode] = useState(false);
+  const [noBallMode, setNoBallMode] = useState(false);
+  const [wideMode, setWideMode] = useState(false);
 
   if (rotateMode) {
     return (
@@ -92,6 +99,96 @@ export default function Controls({
     );
   }
 
+  if (noBallMode) {
+    return (
+      <div className="glass-card rounded-2xl p-5 mb-4 animate-fade-in-up border-2 border-[#e84393]/60">
+        <h3 className="text-sm font-black uppercase tracking-widest text-[#e84393] mb-1 text-center drop-shadow-sm">
+          🚫 No Ball
+        </h3>
+
+        <div className="grid grid-cols-4 gap-2.5 mb-3">
+          {[0, 1, 2, 3].map(r => (
+            <ScoreButton
+              key={r}
+              id={`btn-nb-${r}`}
+              label={`${r}`}
+              subLabel={r === 0 ? 'No run' : `Run${r > 1 ? 's' : ''}`}
+              onClick={() => { setNoBallMode(false); onNoBall(r); }}
+              className="bg-[var(--color-surface-card)] border-2 border-[#e84393]/40 text-[var(--color-text)] hover:bg-[#e84393]/10"
+            />
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 mb-3">
+          <ScoreButton
+            id="btn-nb-4"
+            label="4"
+            subLabel="Four"
+            onClick={() => { setNoBallMode(false); onNoBall(4); }}
+            className={fourStyle}
+          />
+          <ScoreButton
+            id="btn-nb-6"
+            label="6"
+            subLabel="Six"
+            onClick={() => { setNoBallMode(false); onNoBall(6); }}
+            className={sixStyle}
+          />
+        </div>
+        <button
+          onClick={() => setNoBallMode(false)}
+          className="w-full py-4 rounded-xl border-2 border-[var(--color-border)] text-sm font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-surface-dim)] hover:text-[var(--color-text)] transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
+  if (wideMode) {
+    return (
+      <div className="glass-card rounded-2xl p-5 mb-4 animate-fade-in-up border-2 border-[#0984e3]/60">
+        <h3 className="text-sm font-black uppercase tracking-widest text-[#0984e3] mb-1 text-center drop-shadow-sm">
+          ↔️ Wide Ball
+        </h3>
+
+        <div className="grid grid-cols-4 gap-2.5 mb-3">
+          {[0, 1, 2, 3].map(r => (
+            <ScoreButton
+              key={r}
+              id={`btn-wd-${r}`}
+              label={`${r}`}
+              subLabel={r === 0 ? 'Wd only' : `${r} Extra${r > 1 ? 's' : ''}`}
+              onClick={() => { setWideMode(false); onWide(r); }}
+              className="bg-[var(--color-surface-card)] border-2 border-[#0984e3]/40 text-[var(--color-text)] hover:bg-[#0984e3]/10"
+            />
+          ))}
+        </div>
+        <div className="grid grid-cols-2 gap-2.5 mb-3">
+          <ScoreButton
+            id="btn-wd-4"
+            label="4"
+            subLabel="Four"
+            onClick={() => { setWideMode(false); onWide(4); }}
+            className={fourStyle}
+          />
+          <ScoreButton
+            id="btn-wd-6"
+            label="6"
+            subLabel="Six"
+            onClick={() => { setWideMode(false); onWide(6); }}
+            className={sixStyle}
+          />
+        </div>
+        <button
+          onClick={() => setWideMode(false)}
+          className="w-full py-4 rounded-xl border-2 border-[var(--color-border)] text-sm font-bold text-[var(--color-text-muted)] hover:bg-[var(--color-surface-dim)] hover:text-[var(--color-text)] transition-colors"
+        >
+          Cancel
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="glass-card rounded-2xl p-5 mb-4 animate-fade-in-up">
       <h3 className="text-xs font-bold uppercase tracking-widest text-[var(--color-text-muted)] mb-4 flex items-center gap-2">
@@ -108,6 +205,16 @@ export default function Controls({
         <ScoreButton id="btn-6" label="6" subLabel="Six" onClick={() => onAddRuns(6)} className={sixStyle} />
         <ScoreButton id="btn-wicket" label="W" subLabel="Wicket" onClick={onWicket} className={wicketStyle} />
         <ScoreButton id="btn-rotate" label="⇄" subLabel="Rotate" onClick={() => setRotateMode(true)} className={rotateStyle} />
+      </div>
+
+      {/* Extras Row */}
+      <div className={`grid grid-cols-2 gap-2.5 mb-4`}>
+        {matchType === 'standard' && (
+          <ScoreButton id="btn-wide" label="WD" subLabel="Wide" onClick={() => setWideMode(true)} className={`w-full ${wideStyle}`} />
+        )}
+        <div className={matchType === 'standard' ? '' : 'col-span-2'}>
+          <ScoreButton id="btn-noball" label="NB" subLabel="No Ball" onClick={() => setNoBallMode(true)} className={`w-full ${noBallStyle}`} />
+        </div>
       </div>
 
       {/* Action buttons */}
